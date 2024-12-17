@@ -1,0 +1,26 @@
+{
+  "name": "foundry-hardhat-boilerplate",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "install": "npm i --force",
+    "deploy": "npx hardhat run script/Counter.ts",
+    "hardhat-test": "npx hardhat test",
+    "compile": "npx hardhat compile && forge build",
+    "build": "npx hardhat compile && forge build",
+    "forge-test": "forge test"
+  },
+  "author": "Ayush Gupta",
+  "license": "ISC",
+  "description": "A boilerplate repo having foundry and hardhat together",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "hardhat": "^2.22.10"
+  },
+  "dependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.2.3",
+    "@openzeppelin/contracts": "^5.0.2",
+    "dotenv": "^16.4.7",
+    "viem": "^2.21.55"
+  }
+}
