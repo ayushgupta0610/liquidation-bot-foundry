@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {Test} from "forge-std/Test.sol";
+import {Test, console} from "forge-std/Test.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeTransferLib} from "lib/solady/src/utils/SafeTransferLib.sol";
 import {Superman} from "../../src/aave/Superman.sol";
@@ -37,7 +37,7 @@ contract SupermanForkTest is Test {
     function setUp() public {
         // Setup contracts
         user = vm.envAddress("USER_ADDRESS");
-        string memory rpcUrl = vm.envString("BASE_RPC_URL");
+        string memory rpcUrl = vm.envString("ETH_FLASH_RPC_URL");
         uint256 FORK_BLOCK = vm.envUint("FORK_BLOCK_NUMBER"); // Example block number for Base network
         vm.createSelectFork(rpcUrl, FORK_BLOCK);
 
@@ -68,11 +68,11 @@ contract SupermanForkTest is Test {
         // Fund pool with more USDC
         deal(address(debtToken), address(pool), borrowDebtAmount * 10);
 
-        // vm.startPrank(user);
-        // address(collateralToken).safeApprove(address(pool), supplyWethAmount);
-        // pool.supply(address(collateralToken), supplyWethAmount, user, 0);
-        // pool.borrow(address(debtToken), borrowDebtAmount, 2, 0, user);
-        // vm.stopPrank();
+        vm.startPrank(user);
+        address(collateralToken).safeApprove(address(pool), supplyWethAmount);
+        pool.supply(address(collateralToken), supplyWethAmount, user, 0);
+        pool.borrow(address(debtToken), borrowDebtAmount, 2, 0, user);
+        vm.stopPrank();
 
         // Verify liquidatable state
         (,,,,, uint256 healthFactor) = pool.getUserAccountData(user);
@@ -80,13 +80,14 @@ contract SupermanForkTest is Test {
     }
 
     function testForkLiquidationHavingDebtToCover() public {
-        _setupForLiquidation();
+        // _setupForLiquidation();
 
         // Store initial balances
         uint256 initialOwnerCollateral = collateralToken.balanceOf(liquidator);
 
         // Get total debt
-        (, uint256 totalDebtBase,,,,) = pool.getUserAccountData(user);
+        (, uint256 totalDebtBase,,,, uint256 healthFactor) = pool.getUserAccountData(user);
+        console.log("healthFactor :", healthFactor);
 
         // Try to liquidate 75% of the debt (should be capped at 50%)
         uint256 debtToCover = (totalDebtBase * 75) / 100;
@@ -116,13 +117,14 @@ contract SupermanForkTest is Test {
     }
 
     function testForkLiquidationWithoutDebtToCover() public {
-        _setupForLiquidation();
+        // _setupForLiquidation();
 
         // Store initial balances
         // uint256 initialOwnerCollateral = collateralToken.balanceOf(liquidator);
 
         // Get total debt
-        (, uint256 totalDebtBase,,,,) = pool.getUserAccountData(user);
+        (, uint256 totalDebtBase,,,, uint256 healthFactor) = pool.getUserAccountData(user);
+        console.log("healthFactor :", healthFactor);
 
         // Try to liquidate 75% of the debt (should be capped at 50%)
         uint256 debtToCover = (totalDebtBase * 75) / 100;

@@ -39,7 +39,7 @@ contract SupermanTest is Test {
 
     function setUp() public {
         // Setup contracts
-        string memory rpcUrl = vm.envString("ETH_RPC_URL");
+        string memory rpcUrl = vm.envString("ETH_FLASH_RPC_URL");
         vm.createSelectFork(rpcUrl);
 
         HelperConfig config = new HelperConfig();

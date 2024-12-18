@@ -63,7 +63,7 @@ contract Superman is ReentrancyGuard, Ownable, IFlashLoanSimpleReceiver {
         // Get user's debt data
         (, uint256 totalDebtBase,,,, uint256 healthFactor) = pool.getUserAccountData(user);
 
-        require(healthFactor < 1e18, Superman__PositionNotLiquidatable());
+        // require(healthFactor < 1e18, Superman__PositionNotLiquidatable());
         require(slippageFactor < 10000, Superman__InvalidSlippageFactor());
 
         // Calculate maximum liquidatable amount (50% of the total debt)
