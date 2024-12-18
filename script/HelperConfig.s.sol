@@ -30,6 +30,7 @@ contract HelperConfig is Script {
     uint256 constant ETH_SEPOLIA_CHAIN_ID = 11155111;
     uint256 constant ETH_MAINNET_CHAIN_ID = 1;
     uint256 constant BASE_MAINNET_CHAIN_ID = 8453;
+    uint256 constant ARB_MAINNET_CHAIN_ID = 42161;
 
     // Update the BURNER_WALLET to your burner wallet!
     address constant BURNER_WALLET = 0x47D1111fEC887a7BEb7839bBf0E1b3d215669D86;
@@ -46,6 +47,7 @@ contract HelperConfig is Script {
         networkConfigs[ETH_SEPOLIA_CHAIN_ID] = getEthSepoliaConfig();
         networkConfigs[ETH_MAINNET_CHAIN_ID] = getEthMainnetConfig();
         networkConfigs[BASE_MAINNET_CHAIN_ID] = getBaseMainnetConfig();
+        networkConfigs[ARB_MAINNET_CHAIN_ID] = getArbitrumMainnetConfig();
     }
 
     function getConfig() public view returns (NetworkConfig memory) {
@@ -99,6 +101,19 @@ contract HelperConfig is Script {
             weth: 0x4200000000000000000000000000000000000006,
             routerV2: 0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24,
             aaveOracle: 0x2Cc0Fc26eD4563A5ce5e8bdcfe1A2878676Ae156,
+            account: BURNER_WALLET
+        });
+    }
+
+    function getArbitrumMainnetConfig() public pure returns (NetworkConfig memory) {
+        return NetworkConfig({
+            aavePool: 0x794a61358D6845594F94dc1DB02A252b5b4814aD,
+            poolAddressesProvider: 0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb,
+            comet: 0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf,
+            usdc: 0xaf88d065e77c8cC2239327C5EDb3A432268e5831,
+            weth: 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1,
+            routerV2: 0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24,
+            aaveOracle: 0xb56c2F0B653B2e0b10C9b928C8580Ac5Df02C7C7,
             account: BURNER_WALLET
         });
     }

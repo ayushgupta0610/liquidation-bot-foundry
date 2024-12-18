@@ -10,7 +10,7 @@ contract SupermanScript is Script {
 
     function run() public {
         // Deploy mocks
-        string memory rpcUrl = vm.envString("BASE_RPC_URL");
+        string memory rpcUrl = vm.envString("ARBITRUM_RPC_URL");
         vm.createSelectFork(rpcUrl);
 
         HelperConfig helperConfig = new HelperConfig();

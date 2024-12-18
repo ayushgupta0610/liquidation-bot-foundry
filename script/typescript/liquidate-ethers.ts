@@ -5,7 +5,7 @@ dotenv.config();
 
 const config = {
   mainnet: {
-    rpcUrl: process.env.ETH_RPC_URL!,
+    rpcUrl: process.env.ETH_FLASH_RPC_URL!,
     supermanAddress: "0x...", // Your Superman contract address
     wethAddress: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
     usdcAddress: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
@@ -14,11 +14,19 @@ const config = {
   },
   base: {
     rpcUrl: process.env.BASE_RPC_URL!,
-    supermanAddress: "0x...", // Your Superman contract address
+    supermanAddress: "0x492845a32B8d5b27d39F54F4AE1D0FefE051FB88", // Your Superman contract address
     wethAddress: "0x4200000000000000000000000000000000000006",
     usdcAddress: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
     aavePool: "0xA238Dd80C259a72e81d7e4664a9801593F98d1c5",
     slippageFactor: 250n, // 2.5%
+  },
+  arbitrum: {
+    rpcUrl: process.env.ARBITRUM_RPC_URL!,
+    supermanAddress: "0xE16A82c9d7509EBc271E9e756901ae8D52B0028e", // Your Superman contract address
+    aavePool: "0x794a61358d6845594f94dc1db02a252b5b4814ad",
+    usdcAddress: "0xaf88d065e77c8cc2239327c5edb3a432268e5831",
+    wethAddress: "0x82af49447d8a07e3bd95bd0d56f35241523fbab1",
+    slippageFactor: , // 2.5%
   },
 };
 
