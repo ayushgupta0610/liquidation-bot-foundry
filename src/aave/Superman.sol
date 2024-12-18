@@ -63,7 +63,6 @@ contract Superman is ReentrancyGuard, Ownable, IFlashLoanSimpleReceiver {
         // Get user's debt data
         (, uint256 totalDebtBase,,,, uint256 healthFactor) = pool.getUserAccountData(user);
 
-        // TODO: Make this revert messages in require
         require(healthFactor < 1e18, Superman__PositionNotLiquidatable());
         require(slippageFactor < 10000, Superman__InvalidSlippageFactor());
 
@@ -77,10 +76,6 @@ contract Superman is ReentrancyGuard, Ownable, IFlashLoanSimpleReceiver {
             // Clear any existing approvals
             debtAsset.safeApprove(address(pool), 0);
 
-            // Get initial balances for tracking
-            uint256 initialCollateralBalance = collateralAsset.balanceOf(address(this));
-            uint256 initialDebtBalance = debtAsset.balanceOf(address(this));
-
             // Transfer debt tokens from liquidator
             debtAsset.safeTransferFrom(msg.sender, address(this), actualDebtToCover);
 
@@ -89,17 +84,17 @@ contract Superman is ReentrancyGuard, Ownable, IFlashLoanSimpleReceiver {
             pool.liquidationCall(collateralAsset, debtAsset, user, actualDebtToCover, receiveAToken);
 
             // Handle received collateral and remaining debt tokens
-            uint256 finalCollateralBalance = collateralAsset.balanceOf(address(this));
-            uint256 finalDebtBalance = debtAsset.balanceOf(address(this));
+            uint256 collateralBalance = collateralAsset.balanceOf(address(this));
+            uint256 debtBalance = debtAsset.balanceOf(address(this));
 
             // Transfer received collateral to owner
-            if (finalCollateralBalance > initialCollateralBalance) {
-                collateralAsset.safeTransfer(owner(), finalCollateralBalance - initialCollateralBalance);
+            if (collateralBalance > 0) {
+                collateralAsset.safeTransfer(owner(), collateralBalance);
             }
 
             // Return any unused debt tokens
-            if (finalDebtBalance > initialDebtBalance) {
-                debtAsset.safeTransfer(owner(), finalDebtBalance - initialDebtBalance);
+            if (debtBalance > 0) {
+                debtAsset.safeTransfer(owner(), debtBalance);
             }
         } else {
             // If liquidator doesn't have enough debt tokens, use flash loan
@@ -147,7 +142,7 @@ contract Superman is ReentrancyGuard, Ownable, IFlashLoanSimpleReceiver {
             abi.decode(params, (address, address, uint256));
         pool.liquidationCall(collateralAsset, asset, user, amount, false);
 
-        // convert collateral token to asset
+        // convert collateral token to asset (optimise this)
         uint256 amountIn = collateralAsset.balanceOf(address(this));
         uint256 amountOutMin = calculateAmountOutMin(address(collateralAsset), address(asset), amountIn, slippageFactor);
 
@@ -160,8 +155,8 @@ contract Superman is ReentrancyGuard, Ownable, IFlashLoanSimpleReceiver {
         // approve which contract to pull asset of amount + premium
         asset.safeApprove(address(pool), amount + premium);
 
-        uint256 debtAssetBalance = asset.balanceOf(address(this)) - (amount + premium);
-        asset.safeTransfer(owner(), debtAssetBalance); // the execess debt provided to execute liquidation
+        uint256 debtBalance = asset.balanceOf(address(this)) - (amount + premium);
+        asset.safeTransfer(owner(), debtBalance); // the execess debt provided to execute liquidation
 
         return true;
     }

@@ -99,8 +99,6 @@ contract SupermanTest is Test {
 
         // Store initial balances
         uint256 initialOwnerCollateral = collateralToken.balanceOf(liquidator);
-        uint256 initialOwnerDebt = debtToken.balanceOf(liquidator);
-        uint256 initialUserCollateral = collateralToken.balanceOf(user);
 
         // Get total debt
         (, uint256 totalDebtBase,,,,) = pool.getUserAccountData(user);
@@ -118,7 +116,7 @@ contract SupermanTest is Test {
         vm.stopPrank();
 
         // Verify results
-        (uint256 finalTotalCollateralBase, uint256 finalTotalDebtBase,,,,) = pool.getUserAccountData(user);
+        (, uint256 finalTotalDebtBase,,,,) = pool.getUserAccountData(user);
 
         // Check that no more than 50% was liquidated
         assertGe(finalTotalDebtBase, totalDebtBase / 2, "Cannot liquidate more than 50%");
@@ -154,7 +152,7 @@ contract SupermanTest is Test {
         vm.stopPrank();
 
         // Verify results
-        (uint256 finalTotalCollateralBase, uint256 finalTotalDebtBase,,,,) = pool.getUserAccountData(user);
+        (, uint256 finalTotalDebtBase,,,,) = pool.getUserAccountData(user);
 
         // Check that no more than 50% was liquidated
         assertGe(finalTotalDebtBase, totalDebtBase / 2, "Cannot liquidate more than 50%");
