@@ -69,39 +69,48 @@ contract SupermanForkTest is Test {
         deal(networkConfig.weth, address(user), INITIAL_WETH_BALANCE, false);
         // TODO: Mock price feed of aave such that the price of the collateral reduces
         // Execute a mock transaction to transmit price feed on Chainlink Oracle
-        // _mockTransmitPrice();
+        _mockTransmitPrice(250657873982);
     }
 
-    // function _mockTransmitPrice() private {
-    //     string memory rpcUrl = vm.envString("ETH_RPC_URL");
-    //     uint256 FORK_BLOCK = vm.envUint("FORK_BLOCK_NUMBER");
-    //     vm.createSelectFork(rpcUrl, FORK_BLOCK);
+    function _mockTransmitPrice(int256 newPrice) private {
+        // Debug current price
+        address ETH_USD_FEED = 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419;
+        AggregatorV3Interface priceFeed = AggregatorV3Interface(ETH_USD_FEED);
+        (uint80 roundId, int256 price,,,) = priceFeed.latestRoundData();
+        console.log("Initial ETH price:", uint256(price));
 
-    //     // Debug current price
-    //     address ETH_USD_FEED = 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419;
-    //     AggregatorV3Interface priceFeed = AggregatorV3Interface(ETH_USD_FEED);
-    //     (uint80 roundId, int256 price, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =
-    //         priceFeed.latestRoundData();
-    //     console.log("Initial ETH price:", uint256(price));
+        // Find implementation address
+        AggregatorProxy proxy = AggregatorProxy(ETH_USD_FEED);
+        uint16 currentPhaseId = proxy.phaseId();
+        address implAddress = address(proxy.phaseAggregators(currentPhaseId));
 
-    //     // Find implementation address (phase aggregator)
-    //     AggregatorProxy proxy = AggregatorProxy(ETH_USD_FEED);
-    //     uint16 currentPhaseId = proxy.phaseId();
-    //     console.log("currentPhaseId: ", currentPhaseId);
-    //     address implAddress = address(proxy.phaseAggregators(currentPhaseId));
-    //     console.log("Implementation address:", implAddress);
+        // Transmitter address
+        address transmitter = 0xd8Aa8F3be2fB0C790D3579dcF68a04701C1e33DB;
 
-    //     // This is the OCR transmitter that submits price updates
-    //     address transmitter = 0xd8Aa8F3be2fB0C790D3579dcF68a04701C1e33DB;
-    //     // The actual transmission data from block 21044202
-    //     bytes memory transmitData = hex"98e5b12a";
+        // Create observation array - Chainlink expects this specific format
+        bytes32[] memory obs = new bytes32[](1);
+        uint40 timestamp = uint40(block.timestamp);
+        obs[0] = bytes32((uint256(newPrice) << 64) | (uint256(timestamp) & 0xFFFFFFFFFF));
 
-    //     vm.startPrank(transmitter);
-    //     // We need to interact with implementation contract directly
-    //     (bool success,) = implAddress.call(transmitData);
-    //     require(success, "Price update failed");
-    //     vm.stopPrank();
-    // }
+        // Create report
+        bytes32[] memory rs = new bytes32[](0);
+        bytes32[] memory ss = new bytes32[](0);
+        bytes32 rawReport = bytes32(
+            (uint256(roundId + 1) << 192) | (uint256(uint32(block.timestamp)) << 160)
+                | (uint256(uint32(block.timestamp)) << 128) | (uint256(newPrice) & 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF)
+        );
+
+        vm.startPrank(transmitter);
+        (bool success,) = implAddress.call(
+            abi.encodeWithSignature("transmit(bytes32[],bytes32,bytes32[],bytes32[])", obs, rawReport, rs, ss)
+        );
+        require(success, "Price update failed");
+        vm.stopPrank();
+
+        // Verify the update
+        (, int256 updatedPrice,,,) = priceFeed.latestRoundData();
+        console.log("Updated ETH price:", uint256(updatedPrice));
+    }
 
     function _setupForLiquidation() private {
         uint256 supplyWethAmount = 10 ether;
