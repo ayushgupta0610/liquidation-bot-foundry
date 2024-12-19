@@ -14,8 +14,8 @@ contract PriceCheckerTest is Test {
     AggregatorV3Interface internal priceFeed;
 
     function setUp() public {
-        string memory rpcUrl = vm.envString("ETH_FLASH_RPC_URL");
-        uint256 FORK_BLOCK = vm.envUint("FORK_BLOCK_NUMBER"); // Example block number for Base network
+        string memory rpcUrl = vm.envString("ETH_RPC_URL");
+        uint256 FORK_BLOCK = vm.envUint("FORK_BLOCK_NUMBER");
         vm.createSelectFork(rpcUrl, FORK_BLOCK);
 
         priceFeed = AggregatorV3Interface(0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419);

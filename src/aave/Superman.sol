@@ -63,7 +63,7 @@ contract Superman is ReentrancyGuard, Ownable, IFlashLoanSimpleReceiver {
         // Get user's debt data
         (, uint256 totalDebtBase,,,, uint256 healthFactor) = pool.getUserAccountData(user);
 
-        // require(healthFactor < 1e18, Superman__PositionNotLiquidatable());
+        require(healthFactor < 1e18, Superman__PositionNotLiquidatable());
         require(slippageFactor < 10000, Superman__InvalidSlippageFactor());
 
         // Calculate maximum liquidatable amount (50% of the total debt)
@@ -150,7 +150,7 @@ contract Superman is ReentrancyGuard, Ownable, IFlashLoanSimpleReceiver {
         path[0] = collateralAsset;
         path[1] = asset;
         collateralAsset.safeApprove(address(routerV2), amountIn);
-        routerV2.swapExactTokensForTokens(amountIn, amountOutMin, path, address(this), block.timestamp); // Fix the swap on base
+        routerV2.swapExactTokensForTokens(amountIn, amountOutMin, path, address(this), block.timestamp); // Convert this to v3 for more efficient swap
 
         // approve which contract to pull asset of amount + premium
         asset.safeApprove(address(pool), amount + premium);

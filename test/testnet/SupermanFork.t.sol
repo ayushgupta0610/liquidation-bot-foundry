@@ -59,6 +59,8 @@ contract SupermanForkTest is Test {
 
         // Additional setup
         deal(networkConfig.weth, address(user), INITIAL_WETH_BALANCE, false);
+        // TODO: Mock price feed of aave such that the price of the collateral reduces
+        // Execute a mock transaction to transmit price feed on Chainlink Oracle
     }
 
     function _setupForLiquidation() private {
