@@ -18,6 +18,10 @@ interface AggregatorV3Interface {
         returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound);
 }
 
+interface AuthorizedForwarderInterface {
+    function forward(address to, bytes memory data) external;
+}
+
 contract SupermanForkTest is Test {
     using SafeTransferLib for address;
 
@@ -67,16 +71,16 @@ contract SupermanForkTest is Test {
 
         // Additional setup
         deal(networkConfig.weth, address(user), INITIAL_WETH_BALANCE, false);
-        // TODO: Mock price feed of aave such that the price of the collateral reduces
+
         // Execute a mock transaction to transmit price feed on Chainlink Oracle
-        _mockTransmitPrice(250657873982);
+        _mockTransmitPrice();
     }
 
-    function _mockTransmitPrice(int256 newPrice) private {
+    function _mockTransmitPrice() private {
         // Debug current price
         address ETH_USD_FEED = 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419;
         AggregatorV3Interface priceFeed = AggregatorV3Interface(ETH_USD_FEED);
-        (uint80 roundId, int256 price,,,) = priceFeed.latestRoundData();
+        (, int256 price,,,) = priceFeed.latestRoundData();
         console.log("Initial ETH price:", uint256(price));
 
         // Find implementation address
@@ -84,26 +88,20 @@ contract SupermanForkTest is Test {
         uint16 currentPhaseId = proxy.phaseId();
         address implAddress = address(proxy.phaseAggregators(currentPhaseId));
 
-        // Transmitter address
-        address transmitter = 0xd8Aa8F3be2fB0C790D3579dcF68a04701C1e33DB;
+        // Forwarder address
+        address forwarder = 0x9cFAb1513FFA293E7023159B3C7A4C984B6a3480; // 0xd8Aa8F3be2fB0C790D3579dcF68a04701C1e33DB;
+        address AuthorizedForwarder = 0x5eA7eAe0EBC1f4256806C8bf234F672d410Fc988;
 
-        // Create observation array - Chainlink expects this specific format
-        bytes32[] memory obs = new bytes32[](1);
-        uint40 timestamp = uint40(block.timestamp);
-        obs[0] = bytes32((uint256(newPrice) << 64) | (uint256(timestamp) & 0xFFFFFFFFFF));
+        // From transaction: https://etherscan.io/tx/0xe86bbb7aaacebabb9876a695f8456f13702239406bc32188e537843089dc733f
+        bytes memory data =
+            hex"b1dc65a40001bae4cfd569eba896a006e16d478e1debbd72a760d3b452a0cc307c04d20c000000000000000000000000000000000000000000000000000000000046550543230db5514248bca6cad36b91ff94c1801db6286a6c82d0df5207ee613245d500000000000000000000000000000000000000000000000000000000000000e0000000000000000000000000000000000000000000000000000000000000058000000000000000000000000000000000000000000000000000000000000007000100000101010101000101000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000048000000000000000000000000000000000000000000000000000000000671bd8b917151a020e0a00081d0c0d1e1312061103180b070f051c1604190114101b0900000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000bb5238aa26894b7c5000000000000000000000000000000000000000000000000000000000000001f0000000000000000000000000000000000000000000000000000003a5b7b4b300000000000000000000000000000000000000000000000000000003a5b7b4b300000000000000000000000000000000000000000000000000000003a5dece7570000000000000000000000000000000000000000000000000000003a5dece7570000000000000000000000000000000000000000000000000000003a5e961fc00000000000000000000000000000000000000000000000000000003a5e961fc00000000000000000000000000000000000000000000000000000003a61a052800000000000000000000000000000000000000000000000000000003a61a052800000000000000000000000000000000000000000000000000000003a627473940000000000000000000000000000000000000000000000000000003a627473940000000000000000000000000000000000000000000000000000003a62afe9110000000000000000000000000000000000000000000000000000003a62f004000000000000000000000000000000000000000000000000000000003a62f520980000000000000000000000000000000000000000000000000000003a643fb5800000000000000000000000000000000000000000000000000000003a643fb5800000000000000000000000000000000000000000000000000000003a643fb5800000000000000000000000000000000000000000000000000000003a643fb5800000000000000000000000000000000000000000000000000000003a643fb5800000000000000000000000000000000000000000000000000000003a643fb5800000000000000000000000000000000000000000000000000000003a6449eeb00000000000000000000000000000000000000000000000000000003a64d84c000000000000000000000000000000000000000000000000000000003a64d84c000000000000000000000000000000000000000000000000000000003a64d84c000000000000000000000000000000000000000000000000000000003a64f5a9b40000000000000000000000000000000000000000000000000000003a64f5a9b40000000000000000000000000000000000000000000000000000003a64f5a9b40000000000000000000000000000000000000000000000000000003a64f5a9b40000000000000000000000000000000000000000000000000000003a64f5a9b40000000000000000000000000000000000000000000000000000003a6b94b3300000000000000000000000000000000000000000000000000000003a6b94b3300000000000000000000000000000000000000000000000000000003a6b94b330000000000000000000000000000000000000000000000000000000000000000b10a15c15e34f5b16c39ba3b53bbd03ed4331bcacc8db1a830a6345a66eec1dcbb5da0f0159f24c65c2807bb315bedba44c9b22ed1a769ebbc441616454a0548e5df8d1258f992eb538416629b441d14dac9af9ebd605ce7c21b7002be6ebbf0a31f481c5ad575e777dcbb651a6c95914cc780a47f7d32d9eb6e4b7ca6c9f986faae9441deda23f59d70cb13d305c8ad541b09814e873d73980bc3be8d5e6fedf53ca9739ee8cde6d5ef7edd1084af13355c16019358c1581c1f339627bbbb42a48cfb7895b449f6e0bb50b2e0911955ca61a1ad69a9fa2cd8fb83305d1dfa8e6a541165af679fcd0713deab68cdf91b588c00240f0c55c9aadb75cebfe2116b3643e551cea968401b677204c2be1202e1314dfbec24dc75a2077bb769661a9adc31b3beccf5cb39109d0bb3ab5b1fd1ba659d025623bfd5ad92cc788107a5c43d2441399dd9a29ad436259614973281e01ded9a1053230194b8daf2da8bacea3000000000000000000000000000000000000000000000000000000000000000b232ed764018ecc91182460f9eab66c5d77240952c38512ae302f37648e9c5162790ca3bfc6b00c776893ecd9e69f3aa70d4d775cabafd6b7b0ba607d4b256e3b1ad568c3c161e2034a044b6f1e50dce99fefa7a049b0669da0617e9b7d48904e27cc80b69a654b0ae26abcef74089c854ee31aaa21ff578ec9c07682265da254012b8405c9caad59d1978378360f7d3a772fc2a45ce197d38711cc6f23c694800574b9dfcbd305a8fab06fd5ff22d0d022aa05882cafddcdbff21006dad8341e54406829495704d3ce1dbc89ba17713f75506097418505028c65ea548dbbdef80bddde088ea021c2ad57829af6050713ebb5a438fc04c2ef6d28ad06e6b8a7f543640381ee1ab86fc13326d427cec64a9e8ceb8773003e43650c3a011c5d7896146c88bdd21de19a156529eb7749b6af0da2410d2c5f1b7f0752fba92cdc2a2c635e5aa59a3caf6be0e9ad7f80f9e16f83996958b591a06d043e64f432715c3f";
 
-        // Create report
-        bytes32[] memory rs = new bytes32[](0);
-        bytes32[] memory ss = new bytes32[](0);
-        bytes32 rawReport = bytes32(
-            (uint256(roundId + 1) << 192) | (uint256(uint32(block.timestamp)) << 160)
-                | (uint256(uint32(block.timestamp)) << 128) | (uint256(newPrice) & 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF)
+        vm.startPrank(forwarder);
+        // (bool success,) = AuthorizedForwarderInterface(AuthorizedForwarder).forward(implAddress, data);
+        (bool success,) = AuthorizedForwarder.call(
+            abi.encodeWithSelector(AuthorizedForwarderInterface.forward.selector, implAddress, data)
         );
 
-        vm.startPrank(transmitter);
-        (bool success,) = implAddress.call(
-            abi.encodeWithSignature("transmit(bytes32[],bytes32,bytes32[],bytes32[])", obs, rawReport, rs, ss)
-        );
         require(success, "Price update failed");
         vm.stopPrank();
 
@@ -112,27 +110,7 @@ contract SupermanForkTest is Test {
         console.log("Updated ETH price:", uint256(updatedPrice));
     }
 
-    function _setupForLiquidation() private {
-        uint256 supplyWethAmount = 10 ether;
-        uint256 borrowDebtAmount = 30_000 * 1e6;
-
-        // Fund pool with more USDC
-        deal(address(debtToken), address(pool), borrowDebtAmount * 10);
-
-        vm.startPrank(user);
-        address(collateralToken).safeApprove(address(pool), supplyWethAmount);
-        pool.supply(address(collateralToken), supplyWethAmount, user, 0);
-        pool.borrow(address(debtToken), borrowDebtAmount, 2, 0, user);
-        vm.stopPrank();
-
-        // Verify liquidatable state
-        (,,,,, uint256 healthFactor) = pool.getUserAccountData(user);
-        require(healthFactor < 1e18, "Position not liquidatable");
-    }
-
     function testForkLiquidationHavingDebtToCover() public {
-        // _setupForLiquidation();
-
         // Store initial balances
         uint256 initialOwnerCollateral = collateralToken.balanceOf(liquidator);
 
@@ -168,8 +146,6 @@ contract SupermanForkTest is Test {
     }
 
     function testForkLiquidationWithoutDebtToCover() public {
-        // _setupForLiquidation();
-
         // Store initial balances
         // uint256 initialOwnerCollateral = collateralToken.balanceOf(liquidator);
 
