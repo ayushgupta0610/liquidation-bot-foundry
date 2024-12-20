@@ -44,7 +44,7 @@ contract SupermanForkTest is Test {
     uint256 private constant FLASH_LOAN_PREMIUM = 5; // 0.05%
     uint256 private constant PRECISION = 10000;
     uint8 private constant ORACLE_DECIMAL = 8;
-    uint256 private constant SLIPPAGE_FACTOR = 259; // 2.5% (250) slippage required to convert the collateral asset from debt asset (on Base UV2 from WETH to USDC!)
+    uint256 private constant SLIPPAGE_FACTOR = 30; // 2.5% (250) slippage required to convert the collateral asset from debt asset (on Base UV2 from WETH to USDC!)
 
     function setUp() public {
         // Setup contracts
@@ -77,7 +77,7 @@ contract SupermanForkTest is Test {
     }
 
     function _mockTransmitPrice() private {
-        // Debug current price
+        // Harcoded addresses for ETH
         address ETH_USD_FEED = 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419;
         AggregatorV3Interface priceFeed = AggregatorV3Interface(ETH_USD_FEED);
         (, int256 price,,,) = priceFeed.latestRoundData();
@@ -88,7 +88,7 @@ contract SupermanForkTest is Test {
         uint16 currentPhaseId = proxy.phaseId();
         address implAddress = address(proxy.phaseAggregators(currentPhaseId));
 
-        // Forwarder address
+        // EOA Forwarder address
         address forwarder = 0x9cFAb1513FFA293E7023159B3C7A4C984B6a3480; // 0xd8Aa8F3be2fB0C790D3579dcF68a04701C1e33DB;
         address AuthorizedForwarder = 0x5eA7eAe0EBC1f4256806C8bf234F672d410Fc988;
 
@@ -116,7 +116,7 @@ contract SupermanForkTest is Test {
 
         // Get total debt
         (, uint256 totalDebtBase,,,, uint256 healthFactor) = pool.getUserAccountData(user);
-        console.log("healthFactor :", healthFactor);
+        console.log("healthFactor:", healthFactor);
 
         // Try to liquidate 75% of the debt (should be capped at 50%)
         uint256 debtToCover = (totalDebtBase * 75) / 100;
@@ -151,7 +151,7 @@ contract SupermanForkTest is Test {
 
         // Get total debt
         (, uint256 totalDebtBase,,,, uint256 healthFactor) = pool.getUserAccountData(user);
-        console.log("healthFactor :", healthFactor);
+        console.log("healthFactor:", healthFactor);
 
         // Try to liquidate 75% of the debt (should be capped at 50%)
         uint256 debtToCover = (totalDebtBase * 75) / 100;

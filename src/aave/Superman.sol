@@ -155,8 +155,10 @@ contract Superman is ReentrancyGuard, Ownable, IFlashLoanSimpleReceiver {
         // approve which contract to pull asset of amount + premium
         asset.safeApprove(address(pool), amount + premium);
 
-        uint256 debtBalance = asset.balanceOf(address(this)) - (amount + premium);
-        asset.safeTransfer(owner(), debtBalance); // the execess debt provided to execute liquidation
+        if (asset.balanceOf(address(this)) > (amount + premium)) {
+            uint256 debtBalance = asset.balanceOf(address(this)) - (amount + premium);
+            asset.safeTransfer(owner(), debtBalance); // the execess debt provided to execute liquidation
+        }
 
         return true;
     }
